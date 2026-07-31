@@ -1,0 +1,14 @@
+{
+  "name": "ai-research-funding-platform",
+  "version": "1.0.0",
+  "description": "AI-Powered Research Funding & Innovation Intelligence Platform",
+  "scripts": {
+    "install-all": "npm install && npm install --prefix frontend",
+    "server": "backend\\.venv\\Scripts\\uvicorn app.main:app --port 5001 --reload --app-dir backend",
+    "client": "npm run dev --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\""
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
