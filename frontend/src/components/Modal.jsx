@@ -17,9 +17,9 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay animate-fade-in" onClick={onClose}>
       <div 
-        className="glass-panel modal-content animate-fade-in" 
+        className="glass-panel modal-content animate-scale-in" 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

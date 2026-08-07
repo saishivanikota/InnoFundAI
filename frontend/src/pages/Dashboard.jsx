@@ -12,9 +12,11 @@ import {
   Sparkles,
   ArrowRight,
   ChevronRight,
-  FileText
+  FileText,
+  Download
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { exportDashboardPDF } from '../utils/pdfGenerator';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -217,22 +219,31 @@ const Dashboard = () => {
       {/* Welcome Banner */}
       <div className="dashboard-hero-banner glass-panel" style={{ marginBottom: '2rem' }}>
         <div className="hero-left">
-          <h2>Welcome to Research Funding & Innovation Intel</h2>
+          <h2>Welcome to InnoFund Innovation & Funding Intelligence</h2>
           <p>
-            Secure funding insights, domain trends, and tailored resource discovery for institutional researchers.
+            Explore global grant calls, patent landscapes, and AI readiness metrics tailored for researchers, startups, faculty, and R&D teams.
           </p>
-          {user ? (
-            !profile && (
-              <Link to="/profile" className="btn btn-primary" style={{ marginTop: '0.75rem' }}>
-                Create Research Profile <ArrowRight size={16} />
-              </Link>
-            )
-          ) : (
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
-              <Link to="/login" className="btn btn-primary">Sign In</Link>
-              <Link to="/register" className="btn btn-secondary">Create Account</Link>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+            <button 
+              className="btn btn-secondary"
+              onClick={() => exportDashboardPDF(stats, patentStats)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            >
+              <Download size={16} /> Export Executive Summary (PDF)
+            </button>
+            {user ? (
+              !profile && (
+                <Link to="/profile" className="btn btn-primary">
+                  Set Up Innovation Profile <ArrowRight size={16} />
+                </Link>
+              )
+            ) : (
+              <>
+                <Link to="/login" className="btn btn-primary">Sign In</Link>
+                <Link to="/register" className="btn btn-secondary">Create Account</Link>
+              </>
+            )}
+          </div>
         </div>
         <div className="hero-right-icon">
           <Sparkles size={64} className="banner-sparkle" />
@@ -242,31 +253,31 @@ const Dashboard = () => {
       {/* Overview Cards (5 Clean Cards) */}
       <div className="dashboard-grid">
         <Card 
-          title="Total Researchers"
+          title="Registered Innovators"
           value={summary.totalResearchers}
           icon={<Users size={22} style={{ color: 'var(--accent-primary)' }} />}
-          description="Active research profile logs"
+          description="Active ecosystem member profiles"
         />
         <Card 
           title="Funding Opportunities"
           value={summary.fundingOpportunities}
           icon={<Award size={22} style={{ color: 'var(--accent-secondary)' }} />}
-          description="Indexed active awards"
+          description="Indexed active awards & grants"
         />
         <Card 
-          title="Research Domains"
+          title="Innovation Sectors"
           value={summary.uniqueDomains}
           icon={<Globe size={22} style={{ color: 'var(--accent-warning)' }} />}
-          description="Fields with active funding"
+          description="Sectors with active funding calls"
         />
         <Card 
-          title="Total Publications"
+          title="Cataloged Publications"
           value={summary.totalPublications.toLocaleString()}
           icon={<BookOpen size={22} style={{ color: 'var(--accent-success)' }} />}
           description="Cumulative publications cataloged"
         />
         <Card 
-          title="Total Patents"
+          title="Tracked Patents"
           value={patentStats.summary.total}
           icon={<FileText size={22} style={{ color: 'var(--accent-teal)' }} />}
           description={`${patentStats.summary.granted} Granted / ${patentStats.summary.pending} Pending`}

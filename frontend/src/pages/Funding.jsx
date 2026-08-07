@@ -15,9 +15,11 @@ import {
   Sparkles, 
   Info,
   Clock,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { exportFundingPDF } from '../utils/pdfGenerator';
 
 const Funding = () => {
   const { user, profile } = useAuth();
@@ -160,7 +162,7 @@ const Funding = () => {
             <div className="recommendations-container" style={{ marginBottom: '2rem' }}>
               <div className="recommendations-header">
                 <Sparkles className="rec-icon" size={20} />
-                <h3>Tailored Recommendations for Dr. {profile.full_name.split(' ').pop()}</h3>
+                <h3>Tailored Recommendations for {profile.full_name}</h3>
                 <span className="badge badge-success">Domain: {profile.research_domain}</span>
               </div>
               
@@ -185,7 +187,7 @@ const Funding = () => {
             <Sparkles size={24} />
             <div className="alert-banner-text">
               <h4>Unlock AI-Powered Recommendations</h4>
-              <p>Set up your research credentials and domain inside your profile to get high-value matches matched dynamically to your field.</p>
+              <p>Set up your domain and preferences inside your profile to get high-value funding matches.</p>
             </div>
             <a href="/profile" className="btn btn-primary">Configure Profile</a>
           </div>
@@ -194,8 +196,8 @@ const Funding = () => {
         <div className="glass-panel alert-banner" style={{ marginBottom: '2rem', borderLeftColor: 'var(--accent-primary)' }}>
           <Sparkles size={24} style={{ color: 'var(--accent-primary)' }} />
           <div className="alert-banner-text">
-            <h4>Personalized Recommendations Await</h4>
-            <p>Register or Sign In to build a researcher profile and receive targeted opportunities matching your domain.</p>
+            <h4>Personalized Opportunities Await</h4>
+            <p>Sign In or Register to build an innovation profile and receive targeted funding matches.</p>
           </div>
           <a href="/login" className="btn btn-secondary">Sign In Now</a>
         </div>
@@ -312,7 +314,13 @@ const Funding = () => {
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
-
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => exportFundingPDF(opportunities, { search, domain: selectedDomain })}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+            >
+              <Download size={16} /> Export PDF
+            </button>
           </div>
 
           {loading ? (
@@ -351,22 +359,35 @@ const Funding = () => {
                       </p>
                     </div>
 
-                    <div className="opp-card-footer">
-                      <div className="opp-stats">
-                        <div className="opp-amount">
-                          <DollarSign size={16} />
-                          <span>{formatCurrency(opp.funding_amount)}</span>
+                      <div className="opp-card-footer" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <div className="opp-stats" style={{ flex: 1 }}>
+                          <div className="opp-amount">
+                            <DollarSign size={16} />
+                            <span>{formatCurrency(opp.funding_amount)}</span>
+                          </div>
+                          <div className="opp-days">
+                            <Calendar size={14} />
+                            <span>{getDaysRemaining(opp.deadline)}</span>
+                          </div>
                         </div>
-                        <div className="opp-days">
-                          <Calendar size={14} />
-                          <span>{getDaysRemaining(opp.deadline)}</span>
-                        </div>
+                        
+                        <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDetails(opp)}>
+                          Details
+                        </button>
+                        {opp.url && (
+                          <a 
+                            href={opp.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="btn btn-primary btn-sm"
+                            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                            title="Open Official Source Document"
+                          >
+                            <span>Apply</span>
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
                       </div>
-                      
-                      <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDetails(opp)}>
-                        View Details
-                      </button>
-                    </div>
                   </div>
                 ))}
               </div>
@@ -461,12 +482,16 @@ const Funding = () => {
 
             <div className="modal-actions-panel">
               <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Close Window</button>
-              <button 
+              <a 
+                href={selectedOpp.url || 'https://www.grants.gov/search-grants'}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="btn btn-primary" 
-                onClick={() => { alert('Application portal initialized. In a live system, this link redirects to the host credentials portal.'); }}
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                Apply for Funding
-              </button>
+                <span>Apply on Official Portal</span>
+                <ExternalLink size={16} />
+              </a>
             </div>
           </div>
         </Modal>

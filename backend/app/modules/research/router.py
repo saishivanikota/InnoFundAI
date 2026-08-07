@@ -78,3 +78,16 @@ def get_trends(db: Session = Depends(get_db)):
             for r in raw_trends
         ]
     }
+
+
+@router.get("/works")
+async def search_works(query: str = "artificial intelligence", limit: int = 10):
+    """
+    Queries live OpenAlex API for scientific research publications, DOIs, and landing pages.
+    """
+    results = await open_alex_service.search_publications(query, limit=limit)
+    return {
+        "query": query,
+        "count": len(results),
+        "works": results
+    }

@@ -5,10 +5,10 @@ from sqlalchemy import or_, and_, desc, asc, func
 from app.database import get_db
 from app.modules.patents.models import Patent
 from app.modules.patents.schemas import PatentResponse
-from app.modules.patents.services import USPTOService
+from app.modules.patents.services import USPTOService, OpenAlexService
 
 router = APIRouter()
-uspto_service = USPTOService()
+patent_service = OpenAlexService()
 
 @router.get("")
 async def list_patents(
@@ -23,10 +23,11 @@ async def list_patents(
     limit: int = 10,
     db: Session = Depends(get_db)
 ):
-    # 1. Fetch live open-data USPTO search results and cache
-    if search and len(search.strip()) >= 3:
+    # 1. Fetch live OpenAlex patent search results and cache
+    search_query = search or domain
+    if search_query and len(search_query.strip()) >= 2:
         try:
-            live_patents = await uspto_service.search_patents(search, limit=5)
+            live_patents = await patent_service.search_patents(search_query, limit=5)
             for lp in live_patents:
                 exists = db.query(Patent).filter(Patent.patent_id == lp["patent_id"]).first()
                 if not exists:
@@ -38,13 +39,14 @@ async def list_patents(
                         inventor=lp["inventor"],
                         country=lp["country"],
                         year=lp["year"],
+                        url=lp.get("url"),
                         status=lp["status"]
                     )
                     db.add(db_patent)
             db.commit()
         except Exception as e:
             import logging
-            logging.getLogger(__name__).warning(f"Error fetching live USPTO patents: {str(e)}")
+            logging.getLogger(__name__).warning(f"Error fetching live OpenAlex patents: {str(e)}")
 
     # 2. Build local PostgreSQL query
     query_obj = db.query(Patent)

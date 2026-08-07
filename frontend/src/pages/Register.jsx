@@ -113,8 +113,10 @@ const Register = () => {
                 onChange={(e) => setRole(e.target.value)}
                 disabled={loading}
               >
-                <option value="researcher">Researcher</option>
-                <option value="admin">Administrator</option>
+                <option value="researcher">Researcher / Faculty / Student</option>
+                <option value="startup">Startup / Entrepreneur / Incubator</option>
+                <option value="corporate">Industry Professional / R&D Team</option>
+                <option value="admin">Administrator / Manager</option>
               </select>
             </div>
           </div>

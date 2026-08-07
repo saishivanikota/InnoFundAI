@@ -77,10 +77,19 @@ def get_user_scoring(
 ):
     profile = current_user.profile
     if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Research profile not found. Please set up a profile first."
-        )
+        return {
+            "overall": 75.0,
+            "breakdown": {
+                "researchNovelty": 70.0,
+                "patentStrength": 75.0,
+                "technologyReadiness": 65.0,
+                "marketPotential": 80.0,
+                "fundingRelevance": 75.0
+            },
+            "hasProfile": False,
+            "message": "Complete your research profile to calculate personalized innovation metrics."
+        }
 
     score_data = ai_service.calculate_innovation_score(profile, db)
+    score_data["hasProfile"] = True
     return score_data

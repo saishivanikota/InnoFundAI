@@ -81,7 +81,8 @@ export const api = {
   },
 
   trends: {
-    get: () => request('/api/trends')
+    get: () => request('/api/trends'),
+    getWorks: (query = 'artificial intelligence') => request(`/api/trends/works?query=${encodeURIComponent(query)}`)
   },
 
   dashboard: {

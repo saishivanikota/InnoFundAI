@@ -8,10 +8,11 @@ from app.database import get_db
 from app.modules.auth.router import get_current_user
 from app.modules.funding.models import FundingOpportunity, SavedFunding
 from app.modules.funding.schemas import FundingOpportunityResponse
-from app.modules.funding.services import GrantsGovService
+from app.modules.funding.services import GrantsGovService, OpenAlexFundingService
 
 router = APIRouter()
 grants_gov_service = GrantsGovService()
+openalex_funding_service = OpenAlexFundingService()
 
 @router.get("")
 async def list_funding(
@@ -27,14 +28,18 @@ async def list_funding(
     limit: int = 6,
     db: Session = Depends(get_db)
 ):
-    # 1. Cache dynamic external search results from Grants.gov
-    if search and len(search.strip()) >= 3:
+    # 1. Fetch live search results from OpenAlex and Grants.gov
+    search_query = search or domain
+    if search_query and len(search_query.strip()) >= 2:
         try:
-            # Query live API
-            external_results = await grants_gov_service.search_funding(search, limit=10)
+            # Query live OpenAlex API and Grants.gov
+            openalex_results = await openalex_funding_service.search_funding(search_query, limit=6)
+            external_results = openalex_results
+            if not external_results:
+                external_results = await grants_gov_service.search_funding(search_query, limit=6)
+
             # Cache new opportunities into DB
             for ext in external_results:
-                # Check duplicate by title and organization
                 exists = db.query(FundingOpportunity).filter(
                     and_(
                         FundingOpportunity.title == ext["title"],
@@ -42,7 +47,11 @@ async def list_funding(
                     )
                 ).first()
                 if not exists:
-                    deadline_obj = datetime.strptime(ext["deadline"], "%Y-%m-%d").date()
+                    try:
+                        deadline_obj = datetime.strptime(ext["deadline"], "%Y-%m-%d").date()
+                    except Exception:
+                        deadline_obj = date(2026, 12, 31)
+                    
                     db_opp = FundingOpportunity(
                         title=ext["title"],
                         organization=ext["organization"],
@@ -53,14 +62,14 @@ async def list_funding(
                         description=ext["description"],
                         funding_type=ext["funding_type"],
                         eligibility=ext["eligibility"],
+                        url=ext.get("url"),
                         status=ext["status"]
                     )
                     db.add(db_opp)
             db.commit()
         except Exception as e:
-            # If external API fails or timeouts, proceed with whatever is currently in the database
             import logging
-            logging.getLogger(__name__).warning(f"Error fetching live grants.gov data: {str(e)}")
+            logging.getLogger(__name__).warning(f"Error fetching live funding data: {str(e)}")
 
     # 2. Build local PostgreSQL query
     query_obj = db.query(FundingOpportunity)
@@ -137,10 +146,13 @@ def get_recommendations(
 ):
     profile = current_user.profile
     if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No research profile set. Please create a profile to get tailored recommendations."
-        )
+        # Fallback to top general opportunities if profile is not set up yet
+        recommendations = db.query(FundingOpportunity).order_by(FundingOpportunity.funding_amount.desc()).limit(5).all()
+        return {
+            "domain": "General Research",
+            "recommendations": [FundingOpportunityResponse.model_validate(rec) for rec in recommendations],
+            "hasProfile": False
+        }
 
     domain = profile.research_domain
 
@@ -151,5 +163,6 @@ def get_recommendations(
 
     return {
         "domain": domain,
-        "recommendations": [FundingOpportunityResponse.model_validate(rec) for rec in recommendations]
+        "recommendations": [FundingOpportunityResponse.model_validate(rec) for rec in recommendations],
+        "hasProfile": True
     }

@@ -23,13 +23,13 @@ const Navbar = () => {
       case '/register':
         return 'Account Registration';
       default:
-        return 'Research Platform';
+        return 'InnoFund Platform';
     }
   };
 
   const getGreeting = () => {
     if (profile?.full_name) {
-      return `Welcome, Dr. ${profile.full_name.split(' ').pop()}`;
+      return `Welcome, ${profile.full_name}`;
     }
     if (user?.username) {
       return `Hello, ${user.username}`;

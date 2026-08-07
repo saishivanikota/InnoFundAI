@@ -14,8 +14,10 @@ import {
   Users, 
   Compass, 
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  Download
 } from 'lucide-react';
+import { exportAIInnovationPDF } from '../utils/pdfGenerator';
 
 const AI = () => {
   const toast = useToast();
@@ -213,10 +215,16 @@ const AI = () => {
                   <span className="badge badge-success" style={{ marginBottom: '0.25rem' }}> Gemini Strategy Report </span>
                   <h3 style={{ margin: 0 }}>Innovation Portfolio Analysis</h3>
                 </div>
-                <button className="btn btn-secondary" onClick={copyAll} style={{ gap: '0.5rem' }}>
-                  <Copy size={16} />
-                  Copy Full Report
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button className="btn btn-secondary" onClick={() => exportAIInnovationPDF(idea, activeAnalysis)} style={{ gap: '0.5rem' }}>
+                    <Download size={16} />
+                    Export PDF
+                  </button>
+                  <button className="btn btn-secondary" onClick={copyAll} style={{ gap: '0.5rem' }}>
+                    <Copy size={16} />
+                    Copy Full Report
+                  </button>
+                </div>
               </div>
 
               {/* Research Impact Card */}

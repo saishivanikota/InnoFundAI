@@ -16,6 +16,7 @@ class FundingOpportunity(Base):
     funding_type = Column(String, default="Grant", nullable=False)
     eligibility = Column(String, default="Academic Researchers", nullable=False)
     status = Column(String, default="Open", nullable=False)
+    url = Column(String, nullable=True)
     created_at = Column(DateTime, server_default=func.now())
 
     # Relationships

@@ -12,4 +12,5 @@ class Patent(Base):
     inventor = Column(String, nullable=False)
     country = Column(String, nullable=False)
     year = Column(Integer, nullable=False)
+    url = Column(String, nullable=True)
     status = Column(String, default="Granted", nullable=False)

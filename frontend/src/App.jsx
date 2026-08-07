@@ -14,6 +14,8 @@ import Patents from './pages/Patents';
 import AI from './pages/AI';
 import { ToastProvider } from './context/ToastContext';
 
+import Landing from './pages/Landing';
+
 // Protected Route component wrapper
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -37,41 +39,47 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const MainAppLayout = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: 'var(--bg-primary)',
+        color: 'var(--text-primary)'
+      }}>
+        <h2>Loading user session...</h2>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    );
+  }
 
   return (
     <div className="app-container">
-      {/* Sidebar is visible to all authenticated users; for guests, they can still navigate the public sections */}
       <Sidebar />
-      
       <main className="main-content">
         <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/funding" element={<Funding />} />
-          <Route path="/trends" element={<Trends />} />
-          <Route path="/patents" element={<Patents />} />
-          
-          <Route 
-            path="/ai" 
-            element={
-              <ProtectedRoute>
-                <AI />
-              </ProtectedRoute>
-            } 
-          />
-          
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } 
-          />
-          
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/funding" element={<ProtectedRoute><Funding /></ProtectedRoute>} />
+          <Route path="/trends" element={<ProtectedRoute><Trends /></ProtectedRoute>} />
+          <Route path="/patents" element={<ProtectedRoute><Patents /></ProtectedRoute>} />
+          <Route path="/ai" element={<ProtectedRoute><AI /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

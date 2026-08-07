@@ -8,6 +8,7 @@ class PatentBase(BaseModel):
     inventor: str
     country: str
     year: int
+    url: str | None = None
     status: str = "Granted"
 
 class PatentCreate(PatentBase):

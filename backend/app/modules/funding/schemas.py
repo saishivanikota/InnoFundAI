@@ -12,6 +12,7 @@ class FundingOpportunityBase(BaseModel):
     funding_type: str = "Grant"
     eligibility: str = "Academic Researchers"
     status: str = "Open"
+    url: str | None = None
 
 class FundingOpportunityCreate(FundingOpportunityBase):
     pass

@@ -16,9 +16,11 @@ import {
   BarChart3,
   Award,
   Loader2,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { exportPatentsPDF } from '../utils/pdfGenerator';
 
 const Patents = () => {
   const toast = useToast();
@@ -293,7 +295,13 @@ const Patents = () => {
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               />
             </div>
-
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => exportPatentsPDF(patents, stats)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+            >
+              <Download size={16} /> Export PDF
+            </button>
           </div>
 
           {loading ? (
@@ -338,10 +346,23 @@ const Patents = () => {
                             {patent.status}
                           </span>
                         </td>
-                        <td style={{ padding: '1rem' }}>
+                        <td style={{ padding: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                           <button className="btn btn-secondary btn-sm" onClick={() => handleOpenDetails(patent)}>
-                            View
+                            Details
                           </button>
+                          {patent.url && (
+                            <a 
+                              href={patent.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="btn btn-primary btn-sm"
+                              style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                              title="Open Official Patent Document"
+                            >
+                              <span>Doc</span>
+                              <ExternalLink size={12} />
+                            </a>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -437,9 +458,16 @@ const Patents = () => {
 
             <div className="modal-actions-panel">
               <button className="btn btn-secondary" onClick={() => setIsModalOpen(false)}>Close Window</button>
-              <button className="btn btn-primary" onClick={() => window.open(`https://patents.google.com/patent/${selectedPatent.patent_id}`, '_blank')}>
-                View Original Document
-              </button>
+              <a 
+                href={selectedPatent.url || `https://patents.google.com/patent/${selectedPatent.patent_id.replace('-', '')}/en`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary"
+                style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              >
+                <span>View Official Patent Document</span>
+                <ExternalLink size={16} />
+              </a>
             </div>
           </div>
         </Modal>

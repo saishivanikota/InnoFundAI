@@ -11,6 +11,7 @@ import {
   Download
 } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
+import { exportResearchTrendsPDF } from '../utils/pdfGenerator';
 
 const Trends = () => {
   const toast = useToast();
@@ -158,17 +159,26 @@ const Trends = () => {
               <p>Historical research count index over time (2018-2026)</p>
             </div>
             
-            <select 
-              className="select-field"
-              style={{ width: '220px', padding: '0.5rem' }}
-              value={selectedDomain}
-              onChange={(e) => setSelectedDomain(e.target.value)}
-            >
-              <option value="All">All Domains Combined</option>
-              {domains.map(d => (
-                <option key={d} value={d}>{d}</option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+              <button 
+                className="btn btn-secondary"
+                onClick={() => exportResearchTrendsPDF(trendsData)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+              >
+                <Download size={16} /> Export PDF
+              </button>
+              <select 
+                className="select-field"
+                style={{ width: '220px', padding: '0.5rem' }}
+                value={selectedDomain}
+                onChange={(e) => setSelectedDomain(e.target.value)}
+              >
+                <option value="All">All Domains Combined</option>
+                {domains.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <TrendChart type="line" data={lineChartPayload} height={320} />
@@ -182,13 +192,13 @@ const Trends = () => {
         </div>
 
         {/* Analytics Growth Details Table */}
+        {/* Analytics Growth Details Table */}
         <div className="glass-panel col-12">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
             <div>
               <h3 style={{ margin: 0 }}>Domain Growth Matrix (2018 vs 2026)</h3>
               <p style={{ margin: 0 }}>Comparison of compound research output and publication scaling</p>
             </div>
-
           </div>
           
           <div className="table-container">
@@ -225,7 +235,95 @@ const Trends = () => {
             </table>
           </div>
         </div>
+
+        {/* Live OpenAlex Scientific Works Explorer */}
+        <div className="glass-panel col-12" style={{ marginTop: '1.5rem' }}>
+          <OpenAlexWorksExplorer />
+        </div>
       </div>
+    </div>
+  );
+};
+
+const OpenAlexWorksExplorer = () => {
+  const [search, setSearch] = useState('artificial intelligence');
+  const [works, setWorks] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchWorks = async (queryStr) => {
+    setLoading(true);
+    try {
+      const data = await api.trends.getWorks(queryStr);
+      setWorks(data.works || []);
+    } catch (err) {
+      console.error('Failed to fetch OpenAlex works', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchWorks(search);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  return (
+    <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+        <div>
+          <span className="badge badge-primary" style={{ marginBottom: '0.25rem' }}>OpenAlex API</span>
+          <h3 style={{ margin: 0 }}>Scientific Research Publications</h3>
+          <p style={{ margin: 0 }}>Explore real peer-reviewed works, preprints, authors, and DOIs</p>
+        </div>
+        <div className="search-bar-wrapper" style={{ width: '320px', marginBottom: 0 }}>
+          <input 
+            type="text" 
+            className="input-field" 
+            placeholder="Search OpenAlex publications..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '2rem' }}>
+          <Loader2 className="animate-spin" size={24} />
+        </div>
+      ) : works.length === 0 ? (
+        <p className="text-muted" style={{ padding: '1rem', textAlign: 'center' }}>No publication works found for "{search}".</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          {works.map((w, idx) => (
+            <div key={idx} style={{ padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: '6px', border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                <div style={{ flex: 1 }}>
+                  <h4 style={{ fontSize: '0.95rem', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>{w.title}</h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>
+                    {Array.isArray(w.authors) ? w.authors.slice(0, 4).join(', ') : w.authors} • {w.journal} ({w.year || 'N/A'})
+                  </p>
+                  <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    {w.abstract.length > 200 ? `${w.abstract.substring(0, 200)}...` : w.abstract}
+                  </p>
+                </div>
+                {w.doi || w.external_id ? (
+                  <a 
+                    href={w.doi || w.external_id} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn btn-secondary btn-sm"
+                    style={{ textDecoration: 'none', whiteSpace: 'nowrap' }}
+                  >
+                    View DOI / Source ↗
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
