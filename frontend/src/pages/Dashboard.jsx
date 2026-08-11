@@ -387,7 +387,7 @@ const Dashboard = () => {
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '150px' }}>
                 <Loader2 className="animate-spin" size={24} />
               </div>
-            ) : scoring ? (
+            ) : (scoring && scoring.breakdown) ? (
               <div className="scoring-dashboard-layout" style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap' }}>
                 
                 {/* Left side: circular progress and details */}
@@ -404,20 +404,20 @@ const Dashboard = () => {
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                         fill="none"
                         stroke="var(--accent-primary)"
-                        strokeDasharray={`${scoring.overall}, 100`}
+                        strokeDasharray={`${scoring.overall || 0}, 100`}
                         strokeWidth="2.5"
                         strokeLinecap="round"
                       />
                     </svg>
                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                      <span style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>{scoring.overall}%</span>
+                      <span style={{ fontSize: '1.8rem', fontWeight: '800', color: 'var(--text-primary)' }}>{scoring.overall || 0}%</span>
                       <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: '600', textTransform: 'uppercase' }}>Index Score</span>
                     </div>
                   </div>
                   <h4>Innovation Readiness Category</h4>
                   <p className="text-secondary" style={{ fontSize: '0.88rem', marginTop: '0.25rem' }}>
-                    {scoring.overall >= 85 ? "Strategic Commercial Grade (TRL 5+)" : 
-                     scoring.overall >= 75 ? "Advanced Proof of Concept (TRL 3-4)" : 
+                    {(scoring.overall || 0) >= 85 ? "Strategic Commercial Grade (TRL 5+)" : 
+                     (scoring.overall || 0) >= 75 ? "Advanced Proof of Concept (TRL 3-4)" : 
                      "Early Stage Concept (TRL 1-2)"}
                   </p>
                 </div>
@@ -429,10 +429,10 @@ const Dashboard = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Research Novelty (30% weight)</span>
-                      <span style={{ color: 'var(--accent-primary)', fontWeight: '600' }}>{scoring.breakdown.researchNovelty} / 100</span>
+                      <span style={{ color: 'var(--accent-primary)', fontWeight: '600' }}>{scoring.breakdown?.researchNovelty || 0} / 100</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${scoring.breakdown.researchNovelty}%`, height: '100%', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
+                      <div style={{ width: `${scoring.breakdown?.researchNovelty || 0}%`, height: '100%', background: 'var(--accent-primary)', borderRadius: '4px' }}></div>
                     </div>
                   </div>
 
@@ -440,10 +440,10 @@ const Dashboard = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Patent Strength (20% weight)</span>
-                      <span style={{ color: 'var(--accent-secondary)', fontWeight: '600' }}>{scoring.breakdown.patentStrength} / 100</span>
+                      <span style={{ color: 'var(--accent-secondary)', fontWeight: '600' }}>{scoring.breakdown?.patentStrength || 0} / 100</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${scoring.breakdown.patentStrength}%`, height: '100%', background: 'var(--accent-secondary)', borderRadius: '4px' }}></div>
+                      <div style={{ width: `${scoring.breakdown?.patentStrength || 0}%`, height: '100%', background: 'var(--accent-secondary)', borderRadius: '4px' }}></div>
                     </div>
                   </div>
 
@@ -451,10 +451,10 @@ const Dashboard = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Technology Readiness (15% weight)</span>
-                      <span style={{ color: 'var(--accent-teal)', fontWeight: '600' }}>{scoring.breakdown.technologyReadiness} / 100</span>
+                      <span style={{ color: 'var(--accent-teal)', fontWeight: '600' }}>{scoring.breakdown?.technologyReadiness || 0} / 100</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${scoring.breakdown.technologyReadiness}%`, height: '100%', background: 'var(--accent-teal)', borderRadius: '4px' }}></div>
+                      <div style={{ width: `${scoring.breakdown?.technologyReadiness || 0}%`, height: '100%', background: 'var(--accent-teal)', borderRadius: '4px' }}></div>
                     </div>
                   </div>
 
@@ -462,10 +462,10 @@ const Dashboard = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Market Potential (20% weight)</span>
-                      <span style={{ color: 'var(--accent-success)', fontWeight: '600' }}>{scoring.breakdown.marketPotential} / 100</span>
+                      <span style={{ color: 'var(--accent-success)', fontWeight: '600' }}>{scoring.breakdown?.marketPotential || 0} / 100</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${scoring.breakdown.marketPotential}%`, height: '100%', background: 'var(--accent-success)', borderRadius: '4px' }}></div>
+                      <div style={{ width: `${scoring.breakdown?.marketPotential || 0}%`, height: '100%', background: 'var(--accent-success)', borderRadius: '4px' }}></div>
                     </div>
                   </div>
 
@@ -473,10 +473,10 @@ const Dashboard = () => {
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
                       <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Funding Relevance (15% weight)</span>
-                      <span style={{ color: 'var(--accent-warning)', fontWeight: '600' }}>{scoring.breakdown.fundingRelevance} / 100</span>
+                      <span style={{ color: 'var(--accent-warning)', fontWeight: '600' }}>{scoring.breakdown?.fundingRelevance || 0} / 100</span>
                     </div>
                     <div style={{ height: '8px', background: 'var(--bg-tertiary)', borderRadius: '4px', overflow: 'hidden' }}>
-                      <div style={{ width: `${scoring.breakdown.fundingRelevance}%`, height: '100%', background: 'var(--accent-warning)', borderRadius: '4px' }}></div>
+                      <div style={{ width: `${scoring.breakdown?.fundingRelevance || 0}%`, height: '100%', background: 'var(--accent-warning)', borderRadius: '4px' }}></div>
                     </div>
                   </div>
 
@@ -485,7 +485,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <p>Failed to load scoring metrics.</p>
-            )}
+            )}}
           </div>
         )}
       </div>

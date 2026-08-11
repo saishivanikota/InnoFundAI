@@ -45,6 +45,12 @@ def get_ai_history(db: Session = Depends(get_db)):
 @router.get("/scoring")
 def get_ai_scoring():
     return {
-        "metrics": ["Novelty", "Commercial Viability", "Technical Feasibility"],
-        "scoring_range": "1.0 - 10.0"
+        "overall": 84,
+        "breakdown": {
+            "researchNovelty": 86,
+            "patentStrength": 80,
+            "technologyReadiness": 82,
+            "marketPotential": 88,
+            "fundingRelevance": 85
+        }
     }
