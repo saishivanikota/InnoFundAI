@@ -485,7 +485,7 @@ const Dashboard = () => {
               </div>
             ) : (
               <p>Failed to load scoring metrics.</p>
-            )}}
+            )}
           </div>
         )}
       </div>

@@ -1,22 +1,29 @@
+import math
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import Optional, List
+from typing import Optional
 from app.database import get_db
 from app.modules.patents.models import Patent
 from app.modules.patents.schemas import PatentResponse
 
 router = APIRouter()
 
-@router.get("", response_model=List[PatentResponse])
+@router.get("")
 def get_patents(
     search: Optional[str] = None,
     domain: Optional[str] = None,
     country: Optional[str] = None,
     status: Optional[str] = None,
+    year: Optional[int] = None,
+    sort: Optional[str] = "year",
+    order: Optional[str] = "DESC",
+    page: int = 1,
+    limit: int = 10,
     db: Session = Depends(get_db)
 ):
     query = db.query(Patent)
+
     if search:
         query = query.filter(
             (Patent.title.ilike(f"%{search}%")) |
@@ -30,8 +37,46 @@ def get_patents(
         query = query.filter(Patent.country.ilike(f"%{country}%"))
     if status:
         query = query.filter(Patent.status.ilike(f"%{status}%"))
+    if year is not None:
+        query = query.filter(Patent.year == year)
 
-    return query.all()
+    # Collect distinct meta values
+    all_domains = [d[0] for d in db.query(Patent.technology_domain).distinct().all()]
+    all_countries = [c[0] for c in db.query(Patent.country).distinct().all()]
+    all_statuses = [s[0] for s in db.query(Patent.status).distinct().all()]
+    all_years = [y[0] for y in db.query(Patent.year).distinct().order_by(Patent.year.desc()).all()]
+
+    total_count = query.count()
+
+    # Sorting
+    sort_column = getattr(Patent, sort, Patent.year)
+    if order.upper() == "DESC":
+        query = query.order_by(sort_column.desc())
+    else:
+        query = query.order_by(sort_column.asc())
+
+    # Pagination
+    offset = (page - 1) * limit
+    results = query.offset(offset).limit(limit).all()
+
+    patents = [PatentResponse.model_validate(p) for p in results]
+    total_pages = max(1, math.ceil(total_count / limit))
+
+    return {
+        "patents": patents,
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "totalCount": total_count,
+            "totalPages": total_pages
+        },
+        "meta": {
+            "domains": all_domains,
+            "countries": all_countries,
+            "statuses": all_statuses,
+            "years": all_years
+        }
+    }
 
 @router.get("/stats")
 def get_patent_stats(db: Session = Depends(get_db)):
