@@ -123,7 +123,7 @@ if os.path.isdir(dist_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
     # Serve index.html or other static files from dist
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(full_path: str):
         # Prevent API routes from being intercepted
         if full_path.startswith("api/"):
