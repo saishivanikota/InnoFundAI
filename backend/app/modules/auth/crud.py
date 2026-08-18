@@ -14,8 +14,23 @@ def get_user_by_id(db: Session, user_id: int):
 
 def create_user(db: Session, user_in: UserRegister):
     hashed_pwd = hash_password(user_in.password)
+    
+    # Resolve username
+    uname = user_in.username
+    if not uname:
+        if user_in.full_name:
+            uname = user_in.full_name.strip().replace(" ", "_").lower()
+        else:
+            uname = user_in.email.split("@")[0]
+            
+    # Ensure username is unique if collision
+    existing = db.query(User).filter(User.username == uname).first()
+    if existing:
+        import random
+        uname = f"{uname}_{random.randint(100, 999)}"
+        
     user = User(
-        username=user_in.username,
+        username=uname,
         email=user_in.email,
         password=hashed_pwd,
         role=user_in.role or "researcher"
@@ -23,4 +38,22 @@ def create_user(db: Session, user_in: UserRegister):
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    # Create initial baseline profile if full_name is provided or defaults
+    try:
+        from app.modules.profile.models import Profile
+        full_name = user_in.full_name or uname.replace("_", " ").title()
+        profile = Profile(
+            user_id=user.id,
+            full_name=full_name,
+            organization="Independent Researcher",
+            research_domain="General Research",
+            keywords="Research, Innovation",
+            research_interests="Exploring funding opportunities and innovation intelligence."
+        )
+        db.add(profile)
+        db.commit()
+    except Exception:
+        db.rollback()
+
     return user

@@ -21,7 +21,8 @@ const request = async (url, options = {}) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    const error = new Error(errorData.error || response.statusText || 'API Request Failed');
+    const message = errorData.detail || errorData.error || response.statusText || 'API Request Failed';
+    const error = new Error(typeof message === 'string' ? message : JSON.stringify(message));
     error.status = response.status;
     error.data = errorData;
     throw error;

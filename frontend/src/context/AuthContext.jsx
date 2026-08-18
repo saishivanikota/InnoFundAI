@@ -36,12 +36,14 @@ export const AuthProvider = ({ children }) => {
           const data = await response.json();
           setUser(data.user);
           setProfile(data.profile);
-        } else {
-          // Token expired or invalid
+        } else if (response.status === 401) {
+          // Token is explicitly rejected as invalid or expired
           handleLogout();
+        } else {
+          console.warn(`Session verify returned status ${response.status}. Retaining session token.`);
         }
       } catch (error) {
-        console.error('Session loading failed:', error);
+        console.error('Session loading failed (network or server error):', error);
       } finally {
         setLoading(false);
       }

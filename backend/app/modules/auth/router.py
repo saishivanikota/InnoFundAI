@@ -37,7 +37,10 @@ def get_current_user(
 
 @router.post("/register", response_model=AuthResponse, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserRegister, db: Session = Depends(get_db)):
-    existing = get_user_by_email_or_username(db, user_in.email) or get_user_by_email_or_username(db, user_in.username)
+    existing = get_user_by_email_or_username(db, user_in.email)
+    if not existing and user_in.username:
+        existing = get_user_by_email_or_username(db, user_in.username)
+        
     if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

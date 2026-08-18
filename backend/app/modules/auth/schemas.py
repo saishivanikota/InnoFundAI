@@ -3,7 +3,8 @@ from typing import Optional
 from app.modules.profile.schemas import ProfileResponse
 
 class UserRegister(BaseModel):
-    username: str
+    username: Optional[str] = None
+    full_name: Optional[str] = None
     email: EmailStr
     password: str
     role: Optional[str] = "researcher"

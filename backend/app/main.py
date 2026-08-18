@@ -19,11 +19,26 @@ from app.modules.ai.router import router as ai_router
 from app.modules.dashboard.router import router as dashboard_router
 from app.database import Base, engine
 
+import logging
+from fastapi import Request
+from fastapi.responses import JSONResponse
+
+logger = logging.getLogger("uvicorn.error")
+
 app = FastAPI(
     title="Research Funding & Innovation Platform API",
     description="Production-quality FastAPI backend serving funding discovery, patent landscapes, and AI innovation metrics.",
     version="1.0.0"
 )
+
+# Exception Handler for transparent error debugging
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.exception(f"Unhandled exception on request {request.method} {request.url}: {exc}")
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal Server Error", "error": str(exc)}
+    )
 
 # CORS Configuration
 app.add_middleware(
@@ -33,7 +48,10 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
-        "http://localhost:5001"
+        "http://localhost:5001",
+        "http://127.0.0.1:5001",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -43,6 +61,27 @@ app.add_middleware(
 @app.on_event("startup")
 def startup_event():
     Base.metadata.create_all(bind=engine)
+    # Safely migrate ai_history table if result_json column is missing
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE ai_history ADD COLUMN result_json VARCHAR"))
+            conn.commit()
+    except Exception:
+        pass
+    # Check if database has users; if empty, run seed automatically
+    try:
+        from app.database import SessionLocal
+        from app.modules.auth.models import User
+        db = SessionLocal()
+        user_count = db.query(User).count()
+        db.close()
+        if user_count == 0:
+            logger.info("Empty database detected. Seeding default data...")
+            from app.seed import seed_database
+            seed_database()
+    except Exception as e:
+        logger.warning(f"Auto-seed check encountered an issue: {str(e)}")
 
 # Include Modular Routers
 app.include_router(auth_router, prefix="/api/auth", tags=["Auth"])
@@ -54,5 +93,19 @@ app.include_router(ai_router, prefix="/api/ai", tags=["AI"])
 app.include_router(dashboard_router, prefix="/api/dashboard", tags=["Dashboard"])
 
 @app.get("/health")
+@app.get("/api/health")
 def health():
-    return {"status": "ok", "time": time.time()}
+    db_status = "ok"
+    try:
+        from app.database import SessionLocal
+        from sqlalchemy import text
+        db = SessionLocal()
+        db.execute(text("SELECT 1"))
+        db.close()
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+    return {
+        "status": "ok",
+        "database": db_status,
+        "time": time.time()
+    }
