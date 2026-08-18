@@ -21,7 +21,9 @@ from app.database import Base, engine
 
 import logging
 from fastapi import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -109,3 +111,27 @@ def health():
         "database": db_status,
         "time": time.time()
     }
+
+# Serve static files and SPA
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+dist_dir = os.path.join(base_dir, "frontend", "dist")
+
+if os.path.isdir(dist_dir):
+    # Mount the assets directory if it exists
+    assets_dir = os.path.join(dist_dir, "assets")
+    if os.path.isdir(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    # Serve index.html or other static files from dist
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Prevent API routes from being intercepted
+        if full_path.startswith("api/"):
+            return JSONResponse(status_code=404, content={"detail": "Not Found"})
+            
+        file_path = os.path.join(dist_dir, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+            
+        index_path = os.path.join(dist_dir, "index.html")
+        return FileResponse(index_path)
